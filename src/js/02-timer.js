@@ -2,22 +2,16 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import Notiflix from "notiflix";
 
+Notiflix.Notify.Init();
+
 const options = {
     enableTime: true,
     time_24hr: true,
     defaultDate: new Date(),
     minuteIncrement: 1,
-    onClose(selectedDates) {
-        const selectedDate = selectedDates[0];
-        if (selectedDate < new Date()) {
-            Notiflix.Notify.Failure("Please choose a date in the future");
-            return;
-        }
-        startButton.disabled = false;
-    },
 };
 
-flatpickr("#datetime-picker", options);
+const datetimePicker = flatpickr("#datetime-picker", options);
 
 const startButton = document.querySelector('[data-start]');
 const daysElement = document.querySelector('[data-days]');
@@ -27,9 +21,20 @@ const secondsElement = document.querySelector('[data-seconds]');
 
 let countdownInterval;
 
+datetimePicker.config.onClose.push((selectedDates, dateStr, instance) => {
+    const selectedDate = selectedDates[0];
+    const currentDate = new Date();
+
+    if (selectedDate < new Date()) {
+        Notiflix.Notify.Failure("Please choose a date in the future");
+        startButton.disabled = true;
+    } else {
+        startButton.disabled = false;
+    }
+});
 
 startButton.addEventListener('click', () => {
-    const selectedDate = flatpickr("#datetime-picker").selectedDates[0];
+    const selectedDate = datetimePicker.selectedDates[0];
     const currentDate = new Date();
 
     if (selectedDate <= currentDate) {
@@ -50,7 +55,6 @@ startButton.addEventListener('click', () => {
     }, 1000);
 });
 
-
 function updateTimerDisplay(timeLeft) {
     const { days, hours, minutes, seconds } = convertMs(timeLeft);
     daysElement.textContent = addLeadingZero(days);
@@ -58,7 +62,6 @@ function updateTimerDisplay(timeLeft) {
     minutesElement.textContent = addLeadingZero(minutes);
     secondsElement.textContent = addLeadingZero(seconds);
 }
-
 
 function convertMs(ms) {
     const second = 1000;
