@@ -2,7 +2,6 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import Notiflix from "notiflix";
 
-Notiflix.Notify.Init();
 
 const options = {
     enableTime: true,
@@ -26,34 +25,37 @@ datetimePicker.config.onClose.push((selectedDates, dateStr, instance) => {
     const currentDate = new Date();
 
     if (selectedDate < new Date()) {
-        Notiflix.Notify.Failure("Please choose a date in the future");
+        Notiflix.Notify.failure("Please choose a date in the future");
         startButton.disabled = true;
     } else {
         startButton.disabled = false;
     }
 });
 
-startButton.addEventListener('click', () => {
+
+startButton.addEventListener('click', function () {
     const selectedDate = datetimePicker.selectedDates[0];
-    const currentDate = new Date();
 
-    if (selectedDate <= currentDate) {
-        Notiflix.Notify.Failure("Please choose a date in the future");
-        return;
+    if (selectedDate) {
+
+        intervalId = setInterval(function () {
+            const now = new Date();
+            const timeRemaining = selectedDate - now;
+
+            if (timeRemaining <= 0) {
+                clearInterval(intervalId);
+                Notiflix.Notify.success('Countdown Timer Expired!');
+                return;
+            }
+
+            updateTimerDisplay(timeRemaining);
+
+        }, 1000);
     }
-
-    startButton.disabled = true;
-
-    countdownInterval = setInterval(() => {
-        const timeLeft = selectedDate - new Date();
-        if (timeLeft <= 0) {
-            clearInterval(countdownInterval);
-            updateTimerDisplay(0);
-        } else {
-            updateTimerDisplay(timeLeft);
-        }
-    }, 1000);
 });
+
+startButton.setAttribute("disabled", true);
+
 
 function updateTimerDisplay(timeLeft) {
     const { days, hours, minutes, seconds } = convertMs(timeLeft);
